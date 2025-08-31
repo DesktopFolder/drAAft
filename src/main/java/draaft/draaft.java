@@ -18,6 +18,7 @@ public class draaft implements ModInitializer {
 	public static final String MOD_ID = "draaft";
 	public static final Logger LOGGER = LogManager.getLogger(MOD_ID);
 	public static final String DRAAFT_VERSION = getDraaftVersion();
+	public static final String BACKEND_SERVER_URL = "http://localhost:8080/src/draaft";
 
 	@Override
 	public void onInitialize() {

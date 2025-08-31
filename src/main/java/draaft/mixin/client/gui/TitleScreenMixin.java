@@ -3,6 +3,7 @@ package draaft.mixin.client.gui;
 import draaft.client.ServerClient;
 import me.contaria.speedrunapi.util.TextUtil;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gui.screen.ConfirmChatLinkScreen;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.TitleScreen;
 import net.minecraft.client.gui.widget.ButtonWidget;
@@ -14,16 +15,26 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import java.net.URI;
+import java.net.URISyntaxException;
+
+import static draaft.draaft.BACKEND_SERVER_URL;
+import static draaft.draaft.MOD_ID;
+
 @Mixin(TitleScreen.class)
 public abstract class TitleScreenMixin extends Screen {
     @Unique
     private static final String DEFAULT_BUTTON_HOVER = "drAAft Login";
+    @Unique
+    private static final Logger LOGGER = LogManager.getLogger(MOD_ID);
 
     protected TitleScreenMixin(Text title) {
         super(title);
@@ -48,7 +59,26 @@ public abstract class TitleScreenMixin extends Screen {
             login_button_width,
             login_button_heigh,
             LiteralText.EMPTY,
-            button -> { ServerClient.getInstance().draaftLogin(); })
+            button -> {
+                String clientToken = ServerClient.getInstance().draaftLogin();
+
+                if(clientToken != null) {
+                    // Link opening code adapted from net.minecraft.client.gui.screen.Screen.handleTextClick
+                    String url = BACKEND_SERVER_URL + "/index.html?token=" + clientToken;
+                    try {
+                        URI uRI = new URI(url);
+                        if (this.client != null && this.client.options.chatLinksPrompt) {
+                            this.clickedLink = uRI;
+                            String censoredUrl = BACKEND_SERVER_URL + "/index.html";
+                            this.client.openScreen(new ConfirmChatLinkScreen(this::confirmLink, censoredUrl, true));
+                        } else {
+                            openLink(uRI);
+                        }
+                    } catch (URISyntaxException e) {
+                        LOGGER.error("Failed to open URL", e);
+                    }
+                }
+            })
         {
             @Override
             public void renderButton(MatrixStack matrices, int mouseX, int mouseY, float delta) {

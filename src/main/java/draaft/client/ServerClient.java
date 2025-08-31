@@ -53,7 +53,7 @@ public class ServerClient {
     }
 
     // thanks menx :)
-    public void draaftLogin(/* :) */) {
+    public String draaftLogin(/* :) */) {
         MinecraftClient inst = MinecraftClient.getInstance();
         Session session = inst.getSession();
         // okay: then we add a "generate room" button ingame and it gives you a key
@@ -66,15 +66,15 @@ public class ServerClient {
         } catch (AuthenticationUnavailableException var3) {
             LOGGER.warn("disconnect.loginFailedInfo: disconnect.loginFailedInfo.serversUnavailable");
             connectingStatus = "Error: Servers unavailable!";
-            return;
+            return null;
         } catch (InvalidCredentialsException var4) {
             LOGGER.warn("disconnect.loginFailedInfo: disconnect.loginFailedInfo.invalidSession");
             connectingStatus = "Error: Invalid session!";
-            return;
+            return null;
         } catch (AuthenticationException authenticationException) {
             LOGGER.warn("disconnect.loginFailedInfo {}", authenticationException.getMessage());
             connectingStatus = authenticationException.getMessage();
-            return;
+            return null;
         }
         connectingStatus = "Contacting drAAft server...";
         String username = session.getUsername();
@@ -94,7 +94,7 @@ public class ServerClient {
         } catch (IOException | InterruptedException | URISyntaxException e) {
             LOGGER.warn("Could not contact drAAft server: {}", e.getMessage());
             connectingStatus = "Error contacting drAAft server!";
-            return;
+            return null;
         }
 
         /*
@@ -116,5 +116,6 @@ public class ServerClient {
         clipboard.setClipboard(MinecraftClient.getInstance().getWindow().getHandle(), clientToken);
 
         connectingStatus = "Connected! Password copied to clipboard.";
+        return clientToken;
     }
 }
